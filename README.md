@@ -1,14 +1,14 @@
 # fdc-ingest
-Provides a utility for loading the USDA csv files into a Couchbase datastore.  
+Provides a utility for loading the [USDA FDC](https://fdc.nal.usda.gov/download-datasets.html) csv files into a Couchbase datastore.  
 
 # What's in the repo    
-/ingest -- source for the ingest implemenations
+/ingest -- source for the ingest implemenations      
 /couchbase -- shell scripts for initializing Couchbase
 
 # Building   
-The steps below outline how to go about building and running the applications using Couchbase.  Additional endpoint documentation is provided by a swagger.yaml and a compiled apiDoc.html in the [api/dist](https://github.com/littlebunch/FoodDataCentral-api/tree/master/api/dist) path.  A docker image for the web server is also available and described below.
+The steps below outline how to go about building and running the utility using Couchbase.  
 
-The build requires go version 12.  If you are using Couchbase, then version 6 or greater is preferred.  Both the community edition or licensed edition will work.
+The build requires go version 12.  If you are using [Couchbase](https://www.couchbase.com/downloads), then version 6 or greater is preferred, version 5 will work as well as the community or enterprise edition.
 
 ### Step 1: Clone this repo
 Clone this repo into any location other than your $GOPATH:
@@ -22,7 +22,8 @@ cd ~/fdc-ingest
       
 ### Step 2: Build the binary
 
-The repo contains go.mod and supporting files so a build will automatically install and version all needed libraries.  If you don't want to use go mod then rm go.mod and go.sum and have at it the old-fashioned way.   
+The repo contains go.mod and supporting files so a build will automatically install and version all needed libraries.  If you don't want to use go mod then rm go.mod and have at it the old-fashioned way.   
+
 Build data loader utility:   
 ```
 go build -o $GOBIN/fdcloader admin/loader/loader.go
