@@ -31,7 +31,7 @@ go build -o $GOBIN/fdcloader loader.go
 You're free to choose different names for -o binaries as you like. Or, just issue a go run.
 
 ### Step 3: Install [Couchbase](https://www.couchbase.com)     
-If you do not already have access to a CouchBase instance then you will need to install at least version 5 or greater of the Community edition.  There are a number of easy deployment [options] (https://resources.couchbase.com/cloud-partner-gcp/docs-deploy-gcp) as well -- from a local workstation, docker or the public cloud.  Checkout the latter from [Google](https://resources.couchbase.com/cloud-partner-gcp/docs-deploy-gcp), [Amazon](https://resources.couchbase.com/cloud-partner-gcp/docs-deploy-gcp) and [Azure](https://resources.couchbase.com/cloud-partner-gcp/docs-deploy-gcp).     
+If you do not already have access to a CouchBase instance then you will need to install at least version 5 or greater of the Community edition.  There are a number of easy deployment [options](https://resources.couchbase.com/cloud-partner-gcp/docs-deploy-gcp) as well -- from a local workstation, docker or the public cloud.  Checkout the latter from [Google](https://resources.couchbase.com/cloud-partner-gcp/docs-deploy-gcp), [Amazon](https://resources.couchbase.com/cloud-partner-gcp/docs-deploy-gcp) and [Azure](https://resources.couchbase.com/cloud-partner-gcp/docs-deploy-gcp).     
 
 ### Step 4:  Load the USDA csv data
 1. From your Couchbase console or REST API using the scripts provided in this [repo](https://github.com/littlebunch/fdc-ingest/tree/master/couchbase), create a bucket, e.g. gnutdata, a user, e.g. gnutadmin, with the Application Access role to the bucket and indexes.  
