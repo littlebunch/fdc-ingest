@@ -10,10 +10,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/littlebunch/fdc-api/admin/ingest"
-	"github.com/littlebunch/fdc-api/admin/ingest/dictionaries"
 	"github.com/littlebunch/fdc-api/ds"
 	fdc "github.com/littlebunch/fdc-api/model"
+	"github.com/littlebunch/fdc-ingest/ingest"
+	"github.com/littlebunch/fdc-ingest/ingest/dictionaries"
 )
 
 var (
@@ -134,7 +134,7 @@ func foodGroups(path string, dc ds.DataSource, rc chan error) {
 		rc <- err
 		return
 	}
-	err = dc.GetDictionary("gnutdata", dtype, 0, 500, &il)
+	il, err = dc.GetDictionary("gnutdata", dtype, 0, 500)
 	if err != nil {
 		rc <- err
 		return
@@ -249,7 +249,7 @@ func nutrients(path string, dc ds.DataSource, rc chan error) {
 		n  []fdc.NutrientData
 		il interface{}
 	)
-	if err := dc.GetDictionary("gnutdata", "NUT", 0, 500, &il); err != nil {
+	if il, err = dc.GetDictionary("gnutdata", "NUT", 0, 500); err != nil {
 		rc <- err
 		return
 	}

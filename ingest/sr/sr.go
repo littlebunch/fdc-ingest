@@ -10,10 +10,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/littlebunch/fdc-api/admin/ingest"
-	"github.com/littlebunch/fdc-api/admin/ingest/dictionaries"
 	"github.com/littlebunch/fdc-api/ds"
 	fdc "github.com/littlebunch/fdc-api/model"
+	"github.com/littlebunch/fdc-ingest/ingest"
+	"github.com/littlebunch/fdc-ingest/ingest/dictionaries"
 )
 
 var (
@@ -71,8 +71,10 @@ func (p Sr) ProcessFiles(path string, dc ds.DataSource) error {
 	return err
 }
 func foods(path string, dc ds.DataSource, t string) (int, error) {
-	var il interface{}
-	var dt *fdc.DocType
+	var (
+		il interface{}
+		dt *fdc.DocType
+	)
 	dtype := dt.ToString(fdc.FGSR)
 	fn := path + "food.csv"
 	cnt := 0
@@ -80,7 +82,7 @@ func foods(path string, dc ds.DataSource, t string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	err = dc.GetDictionary("gnutdata", dtype, 0, 500, &il)
+	il, err = dc.GetDictionary("gnutdata", dtype, 0, 500)
 	if err != nil {
 		fmt.Printf("Cannot load food group dictionary")
 		return 0, err
@@ -233,13 +235,13 @@ func nutrients(path string, dc ds.DataSource, rc chan error) {
 		n  []fdc.NutrientData
 		il interface{}
 	)
-	if err := dc.GetDictionary("gnutdata", dt.ToString(fdc.NUT), 0, 500, &il); err != nil {
+	if il, err = dc.GetDictionary("gnutdata", dt.ToString(fdc.NUT), 0, 500); err != nil {
 		rc <- err
 		return
 	}
 	nutmap := dictionaries.InitNutrientInfoMap(il)
 
-	if err := dc.GetDictionary("gnutdata", dt.ToString(fdc.DERV), 0, 500, &il); err != nil {
+	if il, err = dc.GetDictionary("gnutdata", dt.ToString(fdc.DERV), 0, 500); err != nil {
 		rc <- err
 		return
 	}

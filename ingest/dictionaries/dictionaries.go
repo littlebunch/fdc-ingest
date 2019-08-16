@@ -64,7 +64,7 @@ func (p Dictionary) ProcessFiles(path string, dc ds.DataSource) error {
 					Code:        record[1],
 					Type:        t,
 					Description: record[2],
-					LastUpdate:  record[3],
+					//LastUpdate:  record[3],
 				})
 		// FNDDS food groups
 		case fdc.FGFNDDS:
