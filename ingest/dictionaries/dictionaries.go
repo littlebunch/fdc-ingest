@@ -106,37 +106,31 @@ func (p Dictionary) ProcessFiles(path string, dc ds.DataSource) error {
 }
 
 // InitNutrientInfoMap creates a map from NUT documents in the data store.
-func InitNutrientInfoMap(il interface{}) map[uint]fdc.Nutrient {
+func InitNutrientInfoMap(il []interface{}) map[uint]fdc.Nutrient {
 	m := make(map[uint]fdc.Nutrient)
-	switch il := il.(type) {
-	case []fdc.Nutrient:
-		for _, value := range il {
-			m[uint(value.NutrientID)] = value
-		}
+	for _, v := range il {
+		n := v.(fdc.Nutrient)
+		m[uint(n.NutrientID)] = n
 	}
 	return m
 }
 
 // InitDerivationInfoMap creates a map from DERV documents in the data store.
-func InitDerivationInfoMap(il interface{}) map[uint]fdc.Derivation {
+func InitDerivationInfoMap(il []interface{}) map[uint]fdc.Derivation {
 	m := make(map[uint]fdc.Derivation)
-	switch il := il.(type) {
-	case []fdc.Derivation:
-		for _, value := range il {
-			m[uint(value.ID)] = value
-		}
+	for _, v := range il {
+		d := v.(fdc.Derivation)
+		m[uint(d.ID)] = d
 	}
 	return m
 }
 
 // InitFoodGroupInfoMap creates a map from FGSR or FGFNDDS documents in the data store
-func InitFoodGroupInfoMap(il interface{}) map[uint]fdc.FoodGroup {
+func InitFoodGroupInfoMap(il []interface{}) map[uint]fdc.FoodGroup {
 	m := make(map[uint]fdc.FoodGroup)
-	switch il := il.(type) {
-	case []fdc.FoodGroup:
-		for _, value := range il {
-			m[uint(value.ID)] = value
-		}
+	for _, v := range il {
+		fg := v.(fdc.FoodGroup)
+		m[uint(fg.ID)] = fg
 	}
 	return m
 }

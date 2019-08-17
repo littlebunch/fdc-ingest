@@ -72,7 +72,7 @@ func (p Sr) ProcessFiles(path string, dc ds.DataSource) error {
 }
 func foods(path string, dc ds.DataSource, t string) (int, error) {
 	var (
-		il interface{}
+		il []interface{}
 		dt *fdc.DocType
 	)
 	dtype := dt.ToString(fdc.FGSR)
@@ -83,6 +83,7 @@ func foods(path string, dc ds.DataSource, t string) (int, error) {
 		return 0, err
 	}
 	il, err = dc.GetDictionary("gnutdata", dtype, 0, 500)
+
 	if err != nil {
 		fmt.Printf("Cannot load food group dictionary")
 		return 0, err
@@ -107,6 +108,7 @@ func foods(path string, dc ds.DataSource, t string) (int, error) {
 		}
 		f, _ := strconv.ParseInt(record[3], 0, 32)
 		var fg *fdc.FoodGroup
+		//fmt.Printf("f=%d code=%s\n", f, fgmap[uint(f)].Code)
 		if fgmap[uint(f)].Code != "" {
 			fg = &fdc.FoodGroup{ID: fgmap[uint(f)].ID, Code: fgmap[uint(f)].Code, Description: fgmap[uint(f)].Description, Type: dtype}
 
@@ -233,7 +235,7 @@ func nutrients(path string, dc ds.DataSource, rc chan error) {
 	r := csv.NewReader(f)
 	var (
 		n  []fdc.NutrientData
-		il interface{}
+		il []interface{}
 	)
 	if il, err = dc.GetDictionary("gnutdata", dt.ToString(fdc.NUT), 0, 500); err != nil {
 		rc <- err

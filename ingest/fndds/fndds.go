@@ -125,7 +125,7 @@ func foods(path string, dc ds.DataSource, t string) error {
 
 func foodGroups(path string, dc ds.DataSource, rc chan error) {
 	defer close(rc)
-	var il interface{}
+	var il []interface{}
 	var dt *fdc.DocType
 	dtype := dt.ToString(fdc.FGFNDDS)
 	fn := path + "survey_fndds_food.csv"
@@ -247,7 +247,7 @@ func nutrients(path string, dc ds.DataSource, rc chan error) {
 	r := csv.NewReader(f)
 	var (
 		n  []fdc.NutrientData
-		il interface{}
+		il []interface{}
 	)
 	if il, err = dc.GetDictionary("gnutdata", "NUT", 0, 500); err != nil {
 		rc <- err

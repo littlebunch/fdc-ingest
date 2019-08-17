@@ -186,7 +186,7 @@ func nutrients(path string, dc ds.DataSource, rc chan error) {
 	r := csv.NewReader(f)
 	var (
 		n  []fdc.NutrientData
-		il interface{}
+		il []interface{}
 	)
 	if il, err = dc.GetDictionary("gnutdata", dt.ToString(fdc.NUT), 0, 500); err != nil {
 		rc <- err
