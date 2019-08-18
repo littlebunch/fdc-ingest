@@ -55,7 +55,7 @@ COUCHBASE_USER=user_name
 COUCHBASE_PWD=user_password   
 ```
 3. [Download](https://fdc.nal.usda.gov/download-datasets.html) and unzip the supporting data, BFPD, FNDDS and SR csv files into a location of your choice.   
-4. Load the data files.   (Note: the NUT and DERV types must be loaded first.)
+4. Load the supporting data files.   (Note: the NUT and DERV types must be loaded first.)
 ```
 $GOBIN/fdcloader -c /path/to/config.yml -i /path/to/FoodData_Central_Supporting_Data_csv/nutrient.csv -t NUT 
 ```
@@ -70,6 +70,7 @@ And,if you are loading Food Survey data then it's recommend that you load WWEIA 
 ```
 $GOBIN/fdcloader -c /path/to/config.yml -i /path/to/FoodData_Central_Supporting_Data_csv/food_category.csv -t FGSR   
 ```
+5. Load the data files.    
 You can, of course, pick and choose which food datasets to load.  Each may be loaded into the same bucket or can be loaded into separate buckets depending on your application needs.   If loading into separate buckets then be sure to change your config.yml or environment variables before each run.   
 
 Here's how to load Branded Food Products: 
