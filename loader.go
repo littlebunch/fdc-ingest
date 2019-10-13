@@ -7,14 +7,14 @@ import (
 	"log"
 	"os"
 
+	"github.com/littlebunch/fdc-api/ds"
+	"github.com/littlebunch/fdc-api/ds/cb"
+	fdc "github.com/littlebunch/fdc-api/model"
 	"github.com/littlebunch/fdc-ingest/ingest"
 	"github.com/littlebunch/fdc-ingest/ingest/bfpd"
 	"github.com/littlebunch/fdc-ingest/ingest/dictionaries"
 	"github.com/littlebunch/fdc-ingest/ingest/fndds"
 	"github.com/littlebunch/fdc-ingest/ingest/sr"
-	"github.com/littlebunch/fdc-api/ds"
-	"github.com/littlebunch/fdc-api/ds/cb"
-	fdc "github.com/littlebunch/fdc-api/model"
 )
 
 var (
@@ -73,7 +73,7 @@ func main() {
 		in = dictionaries.Dictionary{Dt: dtype}
 	}
 	// ingest the csv files
-	if err := in.ProcessFiles(*i, ds); err != nil {
+	if err := in.ProcessFiles(*i, ds, cs.CouchDb.Bucket); err != nil {
 		log.Fatal(err)
 	}
 

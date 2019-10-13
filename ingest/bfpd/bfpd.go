@@ -17,8 +17,9 @@ import (
 )
 
 var (
-	cnts ingest.Counts
-	err  error
+	cnts    ingest.Counts
+	err     error
+	gbucket string
 )
 
 // Bfpd for implementing the interface
@@ -26,12 +27,8 @@ type Bfpd struct {
 	Doctype string
 }
 
-// ProcessFiles loads a set of Branded Food Products csv files processed
-// in this order:
-//		Products.csv  -- main food file
-//		Servings.csv  -- servings sizes for each food
-//		Nutrients.csv -- nutrient values for each food
-func (p Bfpd) ProcessFiles(path string, dc ds.DataSource) error {
+// ProcessFiles loads a set of Branded Food Products csv
+func (p Bfpd) ProcessFiles(path string, dc ds.DataSource, bucket string) error {
 	var errs, errn error
 	rcs, rcn := make(chan error), make(chan error)
 	c1, c2 := true, true
@@ -39,6 +36,7 @@ func (p Bfpd) ProcessFiles(path string, dc ds.DataSource) error {
 	if err != nil {
 		log.Fatal(err)
 	}
+	gbucket = bucket
 	go foods(path, dc, p.Doctype, rcs)
 	go nutrients(path, dc, rcn)
 	for c1 || c2 {
@@ -188,14 +186,14 @@ func nutrients(path string, dc ds.DataSource, rc chan error) {
 		n  []fdc.NutrientData
 		il []interface{}
 	)
-	if il, err = dc.GetDictionary("gnutdata", dt.ToString(fdc.NUT), 0, 500); err != nil {
+	if il, err = dc.GetDictionary(gbucket, dt.ToString(fdc.NUT), 0, 500); err != nil {
 		rc <- err
 		return
 	}
 
 	nutmap := dictionaries.InitNutrientInfoMap(il)
 
-	if il, err = dc.GetDictionary("gnutdata", dt.ToString(fdc.DERV), 0, 500); err != nil {
+	if il, err = dc.GetDictionary(gbucket, dt.ToString(fdc.DERV), 0, 500); err != nil {
 		rc <- err
 		return
 	}

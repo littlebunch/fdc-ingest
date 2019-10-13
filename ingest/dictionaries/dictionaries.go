@@ -19,7 +19,7 @@ type Dictionary struct {
 }
 
 // ProcessFiles implements an Ingest of Dictionary objects
-func (p Dictionary) ProcessFiles(path string, dc ds.DataSource) error {
+func (p Dictionary) ProcessFiles(path string, dc ds.DataSource, bucket string) error {
 	t := p.Dt.ToString(p.Dt)
 	cnt := 0
 	f, err := os.Open(path)

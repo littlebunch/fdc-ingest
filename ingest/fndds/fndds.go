@@ -17,8 +17,9 @@ import (
 )
 
 var (
-	cnts ingest.Counts
-	err  error
+	cnts    ingest.Counts
+	err     error
+	gbucket string
 )
 
 // Fndds for assigning the inteface
@@ -31,10 +32,11 @@ type Fndds struct {
 //		food.csv  -- main food file
 //		food_portion.csv  -- servings sizes for each food
 //		food_nutrient.csv -- nutrient values for each food
-func (p Fndds) ProcessFiles(path string, dc ds.DataSource) error {
+func (p Fndds) ProcessFiles(path string, dc ds.DataSource, bucket string) error {
 	var errs, errn, erri, errf error
 	rcs, rcn, rci, rcf := make(chan error), make(chan error), make(chan error), make(chan error)
 	c1, c2, c3, c4 := true, true, true, true
+	gbucket = bucket
 	err = foods(path, dc, p.Doctype)
 	if err != nil {
 		log.Fatal(err)
@@ -134,7 +136,7 @@ func foodGroups(path string, dc ds.DataSource, rc chan error) {
 		rc <- err
 		return
 	}
-	il, err = dc.GetDictionary("gnutdata", dtype, 0, 500)
+	il, err = dc.GetDictionary(gbucket, dtype, 0, 500)
 	if err != nil {
 		rc <- err
 		return
@@ -249,7 +251,7 @@ func nutrients(path string, dc ds.DataSource, rc chan error) {
 		n  []fdc.NutrientData
 		il []interface{}
 	)
-	if il, err = dc.GetDictionary("gnutdata", "NUT", 0, 500); err != nil {
+	if il, err = dc.GetDictionary(gbucket, "NUT", 0, 500); err != nil {
 		rc <- err
 		return
 	}

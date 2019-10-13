@@ -18,5 +18,5 @@ type Counts struct {
 // Food Data Central documents, i.e. Branded Foods, Standard release legacy,
 // , Nutrients, etc..
 type Ingest interface {
-	ProcessFiles(path string, dc ds.DataSource) error
+	ProcessFiles(path string, dc ds.DataSource, bucket string) error
 }

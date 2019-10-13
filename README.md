@@ -65,11 +65,11 @@ $GOBIN/fdcloader -c /path/to/config.yml -i /path/to/FoodData_Central_Supporting_
 ```
 If you are loading Standard Release Legacy data then it's recommended that you load food category data before loading the food data:
 ```
-$GOBIN/fdcloader -c /path/to/config.yml -i /path/to/FoodData_Central_Supporting_Data_csv/wweia_food_category.csv -t FGSR   
+$GOBIN/fdcloader -c /path/to/config.yml -i /path/to/FoodData_Central_Supporting_Data_csv/food_category.csv -t FGSR   
 ```
 And,if you are loading Food Survey data then it's recommend that you load WWEIA food category data before loading the food data:
 ```
-$GOBIN/fdcloader -c /path/to/config.yml -i /path/to/FoodData_Central_Supporting_Data_csv/food_category.csv -t FGSR   
+$GOBIN/fdcloader -c /path/to/config.yml -i /path/to/FoodData_Central_Supporting_Data_csv/wweia_food_category.csv -t FGSR   
 ```
 3. Load the data files.    
 You can, of course, pick and choose which food datasets to load.  Each may be loaded into the same bucket or can be loaded into separate buckets depending on your application needs.   If loading into separate buckets then be sure to change your config.yml or environment variables before each run.   
