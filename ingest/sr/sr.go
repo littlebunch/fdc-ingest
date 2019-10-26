@@ -33,12 +33,12 @@ func (p Sr) ProcessFiles(path string, dc ds.DataSource, bucket string) error {
 	gbucket = bucket
 	rcndb, rcs, rcn := make(chan error), make(chan error), make(chan error)
 	c1, c2, c3 := true, true, true
-	cnts.Foods, err = foods(path, dc, p.Doctype)
+	/*cnts.Foods, err = foods(path, dc, p.Doctype)
 	if err != nil {
 		log.Fatal(err)
 	}
 	go ndbnoCw(path, dc, rcndb)
-	go servings(path, dc, rcs)
+	go servings(path, dc, rcs)*/
 	go nutrients(path, dc, rcn)
 	for c1 || c2 || c3 {
 		select {
@@ -77,6 +77,15 @@ func foods(path string, dc ds.DataSource, t string) (int, error) {
 		il []interface{}
 		dt *fdc.DocType
 	)
+	type food struct {
+		ID              string         `json:"_id,"omitempty"`
+		FdcID           string         `json:"fdcId" binding:"required"`
+		Description     string         `json:"foodDescription" binding:"required"`
+		Source          string         `json:"dataSource"`
+		PublicationDate time.Time      `json:"publicationDateTime"`
+		Group           *fdc.FoodGroup `json:"foodGroup,omitempty"`
+		Type            string         `json:"type" binding:"required"`
+	}
 	dtype := dt.ToString(fdc.FGSR)
 	fn := path + "food.csv"
 	cnt := 0
@@ -110,15 +119,16 @@ func foods(path string, dc ds.DataSource, t string) (int, error) {
 		}
 		f, _ := strconv.ParseInt(record[3], 0, 32)
 		var fg *fdc.FoodGroup
-		//fmt.Printf("f=%d code=%s\n", f, fgmap[uint(f)].Code)
 		if fgmap[uint(f)].Code != "" {
 			fg = &fdc.FoodGroup{ID: fgmap[uint(f)].ID, Code: fgmap[uint(f)].Code, Description: fgmap[uint(f)].Description, Type: dtype}
 
 		} else {
 			fg = nil
 		}
+
 		dc.Update(record[0],
-			fdc.Food{
+			food{
+				ID:              record[0],
 				FdcID:           record[0],
 				Description:     record[2],
 				PublicationDate: pubdate,
@@ -295,6 +305,7 @@ func nutrients(path string, dc ds.DataSource, rc chan error) {
 		}
 
 		n = append(n, fdc.NutrientData{
+			ID:         fmt.Sprintf("%s_%d", id, nutmap[uint(v)].Nutrientno),
 			FdcID:      id,
 			Source:     source,
 			Nutrientno: nutmap[uint(v)].Nutrientno,
