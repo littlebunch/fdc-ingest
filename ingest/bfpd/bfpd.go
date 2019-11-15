@@ -32,10 +32,10 @@ func (p Bfpd) ProcessFiles(path string, dc ds.DataSource, bucket string) error {
 	var errs, errn error
 	rcs, rcn := make(chan error), make(chan error)
 	c1, c2 := true, true
-	err := servings(path, dc)
+	/*err := servings(path, dc)
 	if err != nil {
 		log.Fatal(err)
-	}
+	}*/
 	gbucket = bucket
 	go foods(path, dc, p.Doctype, rcs)
 	go nutrients(path, dc, rcn)
@@ -65,7 +65,16 @@ func (p Bfpd) ProcessFiles(path string, dc ds.DataSource, bucket string) error {
 }
 func foods(path string, dc ds.DataSource, t string, rc chan error) {
 	defer close(rc)
-	var food fdc.Food
+	type foodtemp struct {
+		ID              string         `json:"_id,"omitempty"`
+		FdcID           string         `json:"fdcId" binding:"required"`
+		Description     string         `json:"foodDescription" binding:"required"`
+		Source          string         `json:"dataSource"`
+		PublicationDate time.Time      `json:"publicationDateTime"`
+		Group           *fdc.FoodGroup `json:"foodGroup,omitempty"`
+		Type            string         `json:"type" binding:"required"`
+	}
+	var food foodtemp
 	fn := path + "food.csv"
 	f, err := os.Open(fn)
 	if err != nil {
@@ -241,6 +250,7 @@ func nutrients(path string, dc ds.DataSource, rc chan error) {
 		}
 
 		n = append(n, fdc.NutrientData{
+			ID:         fmt.Sprintf("%s_%d", id, nutmap[uint(v)].Nutrientno),
 			FdcID:      id,
 			Nutrientno: nutmap[uint(v)].Nutrientno,
 			Value:      float32(w),

@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"github.com/littlebunch/fdc-api/ds"
-	"github.com/littlebunch/fdc-api/ds/cdb"
+	"github.com/littlebunch/fdc-api/ds/cb"
 	fdc "github.com/littlebunch/fdc-api/model"
 	"github.com/littlebunch/fdc-ingest/ingest"
 	"github.com/littlebunch/fdc-ingest/ingest/bfpd"
@@ -53,7 +53,7 @@ func main() {
 	var (
 		cs fdc.Config
 		in ingest.Ingest
-		cb cdb.Cdb
+		cb cb.Cb
 		ds ds.DataSource
 	)
 	cs.GetConfig(c)

@@ -33,12 +33,12 @@ func (p Sr) ProcessFiles(path string, dc ds.DataSource, bucket string) error {
 	gbucket = bucket
 	rcndb, rcs, rcn := make(chan error), make(chan error), make(chan error)
 	c1, c2, c3 := true, true, true
-	/*cnts.Foods, err = foods(path, dc, p.Doctype)
+	cnts.Foods, err = foods(path, dc, p.Doctype)
 	if err != nil {
 		log.Fatal(err)
 	}
 	go ndbnoCw(path, dc, rcndb)
-	go servings(path, dc, rcs)*/
+	go servings(path, dc, rcs)
 	go nutrients(path, dc, rcn)
 	for c1 || c2 || c3 {
 		select {
@@ -169,6 +169,7 @@ func servings(path string, dc ds.DataSource, rc chan error) {
 		if cid != id {
 			if cid != "" {
 				food.Servings = s
+				fmt.Printf("%s\n", food.ID)
 				dc.Update(cid, food)
 			}
 			cid = id
