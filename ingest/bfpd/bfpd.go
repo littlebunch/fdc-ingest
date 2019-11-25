@@ -32,10 +32,10 @@ func (p Bfpd) ProcessFiles(path string, dc ds.DataSource, bucket string) error {
 	var errs, errn error
 	rcs, rcn := make(chan error), make(chan error)
 	c1, c2 := true, true
-	/*err := servings(path, dc)
+	err := servings(path, dc)
 	if err != nil {
 		log.Fatal(err)
-	}*/
+	}
 	gbucket = bucket
 	go foods(path, dc, p.Doctype, rcs)
 	go nutrients(path, dc, rcn)
@@ -65,16 +65,7 @@ func (p Bfpd) ProcessFiles(path string, dc ds.DataSource, bucket string) error {
 }
 func foods(path string, dc ds.DataSource, t string, rc chan error) {
 	defer close(rc)
-	type foodtemp struct {
-		ID              string         `json:"_id,"omitempty"`
-		FdcID           string         `json:"fdcId" binding:"required"`
-		Description     string         `json:"foodDescription" binding:"required"`
-		Source          string         `json:"dataSource"`
-		PublicationDate time.Time      `json:"publicationDateTime"`
-		Group           *fdc.FoodGroup `json:"foodGroup,omitempty"`
-		Type            string         `json:"type" binding:"required"`
-	}
-	var food foodtemp
+	var food fdc.Food
 	fn := path + "food.csv"
 	f, err := os.Open(fn)
 	if err != nil {
@@ -82,8 +73,13 @@ func foods(path string, dc ds.DataSource, t string, rc chan error) {
 		return
 	}
 	r := csv.NewReader(f)
-	for {
-		record, err := r.Read()
+	records, err := r.ReadAll()
+	if err != nil {
+		rc <- err
+		return
+	}
+	for n := range records {
+		record := records[n]
 		if err == io.EOF {
 			break
 		}
@@ -126,16 +122,12 @@ func servings(path string, dc ds.DataSource) error {
 		s    []fdc.Serving
 		dt   *fdc.DocType
 	)
-
-	for {
-		record, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
+	records, err := r.ReadAll()
+	if err != nil {
+		return err
+	}
+	for n := range records {
+		record := records[n]
 		id := record[0]
 		if cid != id {
 			if cid != "" {
@@ -151,7 +143,6 @@ func servings(path string, dc ds.DataSource) error {
 			food.Source = record[8]
 			food.Type = dt.ToString(fdc.FOOD)
 			if record[7] != "" {
-				fgid++
 				food.Group = &fdc.FoodGroup{ID: int32(fgid), Description: record[7], Type: "FGGPC"}
 			} else {
 				food.Group = nil
