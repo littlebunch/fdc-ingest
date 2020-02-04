@@ -78,6 +78,7 @@ func (p Dictionary) ProcessFiles(path string, dc ds.DataSource, bucket string) e
 					Type:        t,
 					Description: record[1],
 				})
+
 		// nutrients
 		case fdc.NUT:
 			var nid int64
@@ -91,7 +92,7 @@ func (p Dictionary) ProcessFiles(path string, dc ds.DataSource, bucket string) e
 				log.Println("Cannot parse ID: " + record[0])
 				continue
 			}
-			dc.Update(t+":"+record[0],
+			err = dc.Update(t+":"+record[0],
 				fdc.Nutrient{
 					NutrientID: uint(nid),
 					Nutrientno: uint(no),
@@ -99,6 +100,9 @@ func (p Dictionary) ProcessFiles(path string, dc ds.DataSource, bucket string) e
 					Unit:       record[2],
 					Type:       t,
 				})
+			if err != nil {
+				log.Printf("Cannot update dictionary %v\n", err)
+			}
 
 		}
 	}
@@ -131,6 +135,16 @@ func InitFoodGroupInfoMap(il []interface{}) map[uint]fdc.FoodGroup {
 	for _, v := range il {
 		fg := v.(fdc.FoodGroup)
 		m[uint(fg.ID)] = fg
+	}
+	return m
+}
+
+// InitBrandedFoodGroupInfoMap creates a map for FGGPC documents
+func InitBrandedFoodGroupInfoMap(il []interface{}) map[string]fdc.FoodGroup {
+	m := make(map[string]fdc.FoodGroup)
+	for _, v := range il {
+		fg := v.(fdc.FoodGroup)
+		m[fg.Description] = fg
 	}
 	return m
 }

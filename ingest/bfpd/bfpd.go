@@ -121,11 +121,17 @@ func servings(path string, dc ds.DataSource) error {
 		food fdc.Food
 		s    []fdc.Serving
 		dt   *fdc.DocType
+		il   []interface{}
 	)
+	if il, err = dc.GetDictionary(gbucket, dt.ToString(fdc.FGGPC), 0, 500); err != nil {
+		return err
+	}
+	fgrp := dictionaries.InitBrandedFoodGroupInfoMap(il)
 	records, err := r.ReadAll()
 	if err != nil {
 		return err
 	}
+	fgrp = make(map[string]fdc.FoodGroup)
 	for n := range records {
 		record := records[n]
 		id := record[0]
@@ -143,7 +149,12 @@ func servings(path string, dc ds.DataSource) error {
 			food.Source = record[8]
 			food.Type = dt.ToString(fdc.FOOD)
 			if record[7] != "" {
-				food.Group = &fdc.FoodGroup{ID: int32(fgid), Description: record[7], Type: "FGGPC"}
+				_, fg := fgrp[record[7]]
+				if !fg {
+					fgid++
+					fgrp[record[7]] = fdc.FoodGroup{ID: int32(fgid), Description: record[7], Type: dt.ToString(fdc.FGGPC)}
+				}
+				food.Group = &fdc.FoodGroup{ID: int32(fgrp[record[7]].ID), Description: fgrp[record[7]].Description, Type: fgrp[record[7]].Type}
 			} else {
 				food.Group = nil
 			}
@@ -165,6 +176,10 @@ func servings(path string, dc ds.DataSource) error {
 			Servingamount: float32(a),
 		})
 
+	}
+	// write FoodGroups to the bucket
+	for _, v := range fgrp {
+		dc.Update(fmt.Sprintf("%s-%d", dt.ToString(fdc.FGGPC), v.ID), v)
 	}
 	return err
 }
