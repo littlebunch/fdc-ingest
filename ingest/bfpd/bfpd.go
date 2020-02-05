@@ -32,11 +32,12 @@ func (p Bfpd) ProcessFiles(path string, dc ds.DataSource, bucket string) error {
 	var errs, errn error
 	rcs, rcn := make(chan error), make(chan error)
 	c1, c2 := true, true
+	gbucket = bucket
 	err := servings(path, dc)
 	if err != nil {
 		log.Fatal(err)
 	}
-	gbucket = bucket
+
 	go foods(path, dc, p.Doctype, rcs)
 	go nutrients(path, dc, rcn)
 	for c1 || c2 {

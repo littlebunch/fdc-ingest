@@ -146,5 +146,6 @@ func InitBrandedFoodGroupInfoMap(il []interface{}) map[string]fdc.FoodGroup {
 		fg := v.(fdc.FoodGroup)
 		m[fg.Description] = fg
 	}
+
 	return m
 }
