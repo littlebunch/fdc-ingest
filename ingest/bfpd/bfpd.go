@@ -169,13 +169,14 @@ func servings(path string, dc ds.DataSource) error {
 
 		a, err := strconv.ParseFloat(record[4], 32)
 		if err != nil {
-			log.Println(record[0] + ": can't parse serving amount " + record[3])
+			log.Println(record[0] + ": can't parse serving amount " + record[4])
+		} else {
+			s = append(s, fdc.Serving{
+				Nutrientbasis: record[5],
+				Description:   record[6],
+				Servingamount: float32(a),
+			})
 		}
-		s = append(s, fdc.Serving{
-			Nutrientbasis: record[5],
-			Description:   record[6],
-			Servingamount: float32(a),
-		})
 
 	}
 	// write FoodGroups to the bucket
