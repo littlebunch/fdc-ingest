@@ -98,11 +98,11 @@ func foods(path string, dc ds.DataSource, t string, rc chan error) {
 		}
 		if err = dc.Get(record[0], &food); err != nil {
 			fmt.Printf("Cannot fetch record %s", record[0])
+		} else {
+			food.Description = record[2]
+			food.PublicationDate = pubdate
+			dc.Update(record[0], food)
 		}
-		food.Description = record[2]
-		food.PublicationDate = pubdate
-
-		dc.Update(record[0], food)
 	}
 	rc <- err
 	return
@@ -132,23 +132,34 @@ func servings(path string, dc ds.DataSource) error {
 	if err != nil {
 		return err
 	}
-	fgrp = make(map[string]fdc.FoodGroup)
+	//fgrp = make(map[string]fdc.FoodGroup)
 	for n := range records {
 		record := records[n]
 		id := record[0]
 		if cid != id {
 			if cid != "" {
-				food.FdcID = cid
+				food.Upc = cid
 				food.Servings = s
 				dc.Update(cid, food)
 			}
 			cid = id
-			//dc.Get(id, &food)
+			dc.Get(id, &food)
+			food.Upc = record[3]
 			food.Manufacturer = record[1]
-			food.Upc = record[2]
+			food.FdcID = record[0]
 			food.Ingredients = record[3]
 			food.Source = record[8]
 			food.Type = dt.ToString(fdc.FOOD)
+			if record[9] != "" {
+				food.ModifiedDate, _ = time.Parse("2006-01-02", record[9])
+			}
+			if record[10] != "" {
+				food.AvailableDate, _ = time.Parse("2006-01-02", record[10])
+			}
+			if record[12] != "" {
+				food.DiscontinueDate, _ = time.Parse("2006-01-02", record[12])
+			}
+			food.Country = record[11]
 			if record[7] != "" {
 				_, fg := fgrp[record[7]]
 				if !fg {
