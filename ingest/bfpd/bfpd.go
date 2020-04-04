@@ -138,13 +138,13 @@ func servings(path string, dc ds.DataSource) error {
 		id := record[0]
 		if cid != id {
 			if cid != "" {
-				food.Upc = cid
+				food.ID = cid
 				food.Servings = s
 				dc.Update(cid, food)
 			}
 			cid = id
-			dc.Get(id, &food)
-			food.Upc = record[3]
+			//dc.Get(id, &food)
+			food.Upc = record[2]
 			food.Manufacturer = record[1]
 			food.FdcID = record[0]
 			food.Ingredients = record[3]
