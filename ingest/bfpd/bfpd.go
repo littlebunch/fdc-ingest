@@ -29,10 +29,15 @@ type Bfpd struct {
 
 // ProcessFiles loads a set of Branded Food Products csv
 func (p Bfpd) ProcessFiles(path string, dc ds.DataSource, bucket string) error {
+	type line struct {
+		id         int
+		restOfLine string
+	}
 	var errs, errn error
 	rcs, rcn := make(chan error), make(chan error)
 	c1, c2 := true, true
 	gbucket = bucket
+
 	err := servings(path, dc)
 	if err != nil {
 		log.Fatal(err)
