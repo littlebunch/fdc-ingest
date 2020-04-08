@@ -2,13 +2,15 @@
 package bfpd
 
 import (
+	"bufio"
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"strconv"
-	"time"
+	"strings"
 
 	"github.com/littlebunch/fdc-api/ds"
 	fdc "github.com/littlebunch/fdc-api/model"
@@ -17,192 +19,160 @@ import (
 )
 
 var (
-	cnts    ingest.Counts
-	err     error
-	gbucket string
+	cnts ingest.Counts
+	err  error
+	//gbucket string
 )
 
 // Bfpd for implementing the interface
 type Bfpd struct {
 	Doctype string
 }
+type line struct {
+	id         int
+	restOfLine string
+}
+type f struct {
+	FdcID string `json:"fdcId" binding:"required"`
+}
 
 // ProcessFiles loads a set of Branded Food Products csv
 func (p Bfpd) ProcessFiles(path string, dc ds.DataSource, bucket string) error {
-	type line struct {
-		id         int
-		restOfLine string
-	}
-	var errs, errn error
-	rcs, rcn := make(chan error), make(chan error)
-	c1, c2 := true, true
-	gbucket = bucket
 
-	err := servings(path, dc)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	go foods(path, dc, p.Doctype, rcs)
-	go nutrients(path, dc, rcn)
-	for c1 || c2 {
-		select {
-		case errs, c1 = <-rcs:
-			if c1 {
-				if errs != nil {
-					fmt.Printf("Error from foods: %v\n", errs)
-				} else {
-					fmt.Printf("Servings ingest complete.\n")
-				}
-			}
-
-		case errn, c2 = <-rcn:
-			if c2 {
-				if err != nil {
-					fmt.Printf("Error from nutrients: %v\n", errn)
-				} else {
-					fmt.Printf("Nutrient ingest complete.\n")
-				}
-			}
+	/*	var (
+			dt   *fdc.DocType
+			il   []interface{}
+			food fdc.Food
+			s    []fdc.Serving
+			err  error
+		)
+		gbucket = bucket
+		if il, err = dc.GetDictionary(gbucket, dt.ToString(fdc.FGGPC), 0, 500); err != nil {
+			return err
 		}
+		fgrp := dictionaries.InitBrandedFoodGroupInfoMap(il)
+		// read food metadata
+		metadataChan := make(chan *line)
+		go reader(path+"food.csv", metadataChan)
+		// read branded foods details
+		brandedChan := make(chan *line)
+		go reader(path+"branded_food.csv", brandedChan)
+		// join the two data streams
+		mergedLinesChan := make(chan *line)
+		go joiner(metadataChan, brandedChan, mergedLinesChan)
+		// process the merge stream
+		var buf bytes.Buffer
+		r := csv.NewReader(&buf)
+		fgid := 0
+
+		for l := range mergedLinesChan {
+			buf.WriteString(fmt.Sprintf("%v,%v", l.id, l.restOfLine))
+			record, _ := r.Read()
+			fgid++
+			if fgid%10000 == 0 {
+				log.Println(fgid)
+			}
+
+			if rc := dc.FoodExists(record[0]); rc {
+				continue
+			} else { // create a new food
+				s = nil
+				fmt.Printf("%v,%v\n", l.id, l.restOfLine)
+				pubdate, err := time.Parse("2006-01-02", record[4])
+				if err != nil {
+					log.Println(err)
+				}
+				food.ID = record[0]
+				food.FdcID = record[0]
+				food.Description = record[2]
+				food.PublicationDate = pubdate
+				food.Manufacturer = record[5]
+				food.Upc = record[6]
+				food.Ingredients = record[7]
+				cnts.Foods++
+				if cnts.Foods%10000 == 0 {
+					log.Println("Foods Count = ", cnts.Foods)
+				}
+				a, err := strconv.ParseFloat(record[8], 32)
+				if err != nil {
+					log.Println(record[0] + ": can't parse serving amount " + record[8])
+				} else {
+					s = append(s, fdc.Serving{
+						Nutrientbasis: record[9],
+						Description:   record[10],
+						Servingamount: float32(a),
+					})
+					food.Servings = s
+				}
+				food.Source = record[12]
+				if record[13] != "" {
+					food.ModifiedDate, _ = time.Parse("2006-01-02", record[13])
+				}
+				if record[14] != "" {
+					food.AvailableDate, _ = time.Parse("2006-01-02", record[14])
+				}
+				if record[16] != "" {
+					food.DiscontinueDate, _ = time.Parse("2006-01-02", record[16])
+				}
+				food.Country = record[15]
+				food.Type = dt.ToString(fdc.FOOD)
+				if record[11] != "" {
+					_, fg := fgrp[record[11]]
+					if !fg {
+						fgid++
+						fgrp[record[11]] = fdc.FoodGroup{ID: int32(fgid), Description: record[11], Type: dt.ToString(fdc.FGGPC)}
+					}
+					food.Group = &fdc.FoodGroup{ID: int32(fgrp[record[11]].ID), Description: fgrp[record[11]].Description, Type: fgrp[record[11]].Type}
+				} else {
+					food.Group = nil
+				}
+				// first remove any existing versions for this GTIN/UPC code
+				removeVersions(food.Upc, bucket, dc)
+				if err = dc.Update(record[0], food); err != nil {
+					log.Printf("Update %s failed: %v", record[0], err)
+				}
+
+			}
+
+		}
+	*/
+	if err = nutrients(path, bucket, dc); err != nil {
+		fmt.Printf("nutrient load failed: %v", err)
 	}
+
 	log.Printf("Finished.  Counts: %d Foods %d Servings %d Nutrients\n", cnts.Foods, cnts.Servings, cnts.Nutrients)
 	return err
 }
-func foods(path string, dc ds.DataSource, t string, rc chan error) {
-	defer close(rc)
-	var food fdc.Food
-	fn := path + "food.csv"
-	f, err := os.Open(fn)
-	if err != nil {
-		rc <- err
-		return
-	}
-	r := csv.NewReader(f)
-	records, err := r.ReadAll()
-	if err != nil {
-		rc <- err
-		return
-	}
-	for n := range records {
-		record := records[n]
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			rc <- err
-			return
-		}
-		cnts.Foods++
-		if cnts.Foods%1000 == 0 {
-			log.Println("Count = ", cnts.Foods)
-		}
-		pubdate, err := time.Parse("2006-01-02", record[4])
-		if err != nil {
-			log.Println(err)
-		}
-		if err = dc.Get(record[0], &food); err != nil {
-			fmt.Printf("Cannot fetch record %s", record[0])
-		} else {
-			food.Description = record[2]
-			food.PublicationDate = pubdate
-			dc.Update(record[0], food)
-		}
-	}
-	rc <- err
-	return
-}
+func removeVersions(upc string, bucket string, dc ds.DataSource) {
 
-func servings(path string, dc ds.DataSource) error {
-
-	fn := path + "branded_food.csv"
-	fgid := 0
-	f, err := os.Open(fn)
-	if err != nil {
-		return err
-	}
-	r := csv.NewReader(f)
-	cid := ""
 	var (
-		food fdc.Food
-		s    []fdc.Serving
-		dt   *fdc.DocType
-		il   []interface{}
+		r   []interface{}
+		fid f
+		j   []byte
 	)
-	if il, err = dc.GetDictionary(gbucket, dt.ToString(fdc.FGGPC), 0, 500); err != nil {
-		return err
-	}
-	fgrp := dictionaries.InitBrandedFoodGroupInfoMap(il)
-	records, err := r.ReadAll()
-	if err != nil {
-		return err
-	}
-	//fgrp = make(map[string]fdc.FoodGroup)
-	for n := range records {
-		record := records[n]
-		id := record[0]
-		if cid != id {
-			if cid != "" {
-				food.ID = cid
-				food.Servings = s
-				dc.Update(cid, food)
-			}
-			cid = id
-			//dc.Get(id, &food)
-			food.Upc = record[2]
-			food.Manufacturer = record[1]
-			food.FdcID = record[0]
-			food.Ingredients = record[3]
-			food.Source = record[8]
-			food.Type = dt.ToString(fdc.FOOD)
-			if record[9] != "" {
-				food.ModifiedDate, _ = time.Parse("2006-01-02", record[9])
-			}
-			if record[10] != "" {
-				food.AvailableDate, _ = time.Parse("2006-01-02", record[10])
-			}
-			if record[12] != "" {
-				food.DiscontinueDate, _ = time.Parse("2006-01-02", record[12])
-			}
-			food.Country = record[11]
-			if record[7] != "" {
-				_, fg := fgrp[record[7]]
-				if !fg {
-					fgid++
-					fgrp[record[7]] = fdc.FoodGroup{ID: int32(fgid), Description: record[7], Type: dt.ToString(fdc.FGGPC)}
-				}
-				food.Group = &fdc.FoodGroup{ID: int32(fgrp[record[7]].ID), Description: fgrp[record[7]].Description, Type: fgrp[record[7]].Type}
-			} else {
-				food.Group = nil
-			}
-			s = nil
-		}
 
-		cnts.Servings++
-		if cnts.Servings%10000 == 0 {
-			log.Println("Servings Count = ", cnts.Servings)
-		}
-
-		a, err := strconv.ParseFloat(record[4], 32)
-		if err != nil {
-			log.Println(record[0] + ": can't parse serving amount " + record[4])
-		} else {
-			s = append(s, fdc.Serving{
-				Nutrientbasis: record[5],
-				Description:   record[6],
-				Servingamount: float32(a),
-			})
-		}
-
+	q := fmt.Sprintf("SELECT fdcId from %s where upc = \"%s\" AND type=\"FOOD\"", bucket, upc)
+	if err := dc.Query(q, &r); err != nil {
+		log.Printf("%v\n", err)
+		return
 	}
-	// write FoodGroups to the bucket
-	for _, v := range fgrp {
-		dc.Update(fmt.Sprintf("%s-%d", dt.ToString(fdc.FGGPC), v.ID), v)
+	for i := range r {
+		if j, err = json.Marshal(r[i]); err != nil {
+			log.Printf("%s %v %v\n", upc, j, err)
+		}
+		if err = json.Unmarshal(j, &fid); err != nil {
+			log.Printf("%s %s %v\n", upc, string(j), err)
+		}
+		log.Printf("Removed %s\n", fid.FdcID)
+		if err = dc.Remove(fid.FdcID); err != nil {
+			log.Printf("Cannot remove %s\n", fid.FdcID)
+		}
 	}
-	return err
+	return
+
 }
-func nutrients(path string, dc ds.DataSource, rc chan error) {
-	defer close(rc)
+
+func nutrients(path string, gbucket string, dc ds.DataSource) error {
 	var (
 		dt          *fdc.DocType
 		food        fdc.Food
@@ -211,49 +181,55 @@ func nutrients(path string, dc ds.DataSource, rc chan error) {
 	fn := path + "food_nutrient.csv"
 	f, err := os.Open(fn)
 	if err != nil {
-		rc <- err
-		return
+		return err
 	}
+
 	r := csv.NewReader(f)
 	var (
 		n  []fdc.NutrientData
 		il []interface{}
 	)
+	q := fmt.Sprintf("select gd.* from %s as gd where type='%s' offset %d limit %d", gbucket, dt.ToString(fdc.NUT), 0, 500)
+	fmt.Println(q)
 	if il, err = dc.GetDictionary(gbucket, dt.ToString(fdc.NUT), 0, 500); err != nil {
-		rc <- err
-		return
+		return err
 	}
 
 	nutmap := dictionaries.InitNutrientInfoMap(il)
 
 	if il, err = dc.GetDictionary(gbucket, dt.ToString(fdc.DERV), 0, 500); err != nil {
-		rc <- err
-		return
+		return err
 	}
 	dlmap := dictionaries.InitDerivationInfoMap(il)
-
+	processit := true
 	for {
 		record, err := r.Read()
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
-			rc <- err
-			return
+			return err
 		}
 
 		id := record[1]
-
+		v, err := strconv.ParseInt(record[2], 0, 32)
+		if err != nil {
+			log.Println(record[0] + ": can't parse nutrient no " + record[1])
+		}
+		if processit = dc.FoodExists(id); !processit {
+			// delete this record if the parent food doesn't exist
+			nid := fmt.Sprintf("%s_%d", id, nutmap[uint(v)].Nutrientno)
+			if err = dc.Remove(nid); err != nil {
+				log.Printf("Problem with removing %s: %v\n", nid, err)
+				continue
+			}
+		}
 		cnts.Nutrients++
 		w, err := strconv.ParseFloat(record[3], 32)
 		if err != nil {
 			log.Println(record[0] + ": can't parse value " + record[4])
 		}
 
-		v, err := strconv.ParseInt(record[2], 0, 32)
-		if err != nil {
-			log.Println(record[0] + ": can't parse nutrient no " + record[1])
-		}
 		d, err := strconv.ParseInt(record[5], 0, 32)
 		if err != nil {
 			log.Println(record[5] + ": can't parse derivation no " + record[1])
@@ -294,6 +270,65 @@ func nutrients(path string, dc ds.DataSource, rc chan error) {
 		}
 
 	}
-	rc <- nil
-	return
+
+	return nil
+}
+func reader(fname string, out chan<- *line) {
+	defer close(out) // close channel on return
+
+	// open the file
+	file, err := os.Open(fname)
+	if err != nil {
+		log.Fatalf("open: %v", err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	header := true
+	for scanner.Scan() {
+		var l line
+		columns := strings.SplitN(scanner.Text(), ",", 2)
+		// ignore first line (header)
+		if header {
+			header = false
+			continue
+		}
+		// convert ID to integer for easier comparison
+		id, err := strconv.Atoi(strings.ReplaceAll(columns[0], "\"", ""))
+		if err != nil {
+			log.Fatalf("ParseInt: %v", err)
+		}
+		l.id = id
+		l.restOfLine = columns[1]
+		// send the line to the channel
+		out <- &l
+	}
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+}
+func joiner(metadata, setIDs <-chan *line, out chan<- *line) {
+	defer close(out) // close channel on return
+
+	bf := &line{}
+	for md := range metadata {
+		sep := ","
+		// add matching branded_foods.csv line (if left over from previous iteration)
+		if bf.id == md.id {
+			md.restOfLine += sep + bf.restOfLine
+			sep = " "
+		}
+		// look for matching branded foods
+		for bf = range setIDs {
+			// add all branded_foods.csv with matching IDs
+			if bf.id == md.id {
+				md.restOfLine += sep + bf.restOfLine
+				sep = " "
+			} else if bf.id > md.id {
+				break
+			}
+		}
+		// send the augmented line into the channel
+		out <- md
+	}
 }
