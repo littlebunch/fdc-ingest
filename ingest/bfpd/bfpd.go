@@ -78,7 +78,6 @@ func (p Bfpd) ProcessFiles(path string, dc ds.DataSource, bucket string) error {
 				continue
 			} else { // create a new food
 				s = nil
-				fmt.Printf("%v,%v\n", l.id, l.restOfLine)
 				pubdate, err := time.Parse("2006-01-02", record[4])
 				if err != nil {
 					log.Println(err)
@@ -167,6 +166,7 @@ func removeVersions(upc string, bucket string, dc ds.DataSource) {
 		if err = dc.Remove(fid.FdcID); err != nil {
 			log.Printf("Cannot remove %s\n", fid.FdcID)
 		}
+		log.Printf("Removed %s\n",fid.FdcID)
 	}
 	return
 
