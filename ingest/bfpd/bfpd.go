@@ -3,6 +3,7 @@ package bfpd
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/littlebunch/fdc-api/ds"
 	fdc "github.com/littlebunch/fdc-api/model"
@@ -39,15 +41,14 @@ type f struct {
 // ProcessFiles loads a set of Branded Food Products csv
 func (p Bfpd) ProcessFiles(path string, dc ds.DataSource, bucket string) error {
 
-	/*	var (
+		var (
 			dt   *fdc.DocType
 			il   []interface{}
 			food fdc.Food
 			s    []fdc.Serving
 			err  error
 		)
-		gbucket = bucket
-		if il, err = dc.GetDictionary(gbucket, dt.ToString(fdc.FGGPC), 0, 500); err != nil {
+		if il, err = dc.GetDictionary(bucket, dt.ToString(fdc.FGGPC), 0, 500); err != nil {
 			return err
 		}
 		fgrp := dictionaries.InitBrandedFoodGroupInfoMap(il)
@@ -135,7 +136,6 @@ func (p Bfpd) ProcessFiles(path string, dc ds.DataSource, bucket string) error {
 			}
 
 		}
-	*/
 	if err = nutrients(path, bucket, dc); err != nil {
 		fmt.Printf("nutrient load failed: %v", err)
 	}
