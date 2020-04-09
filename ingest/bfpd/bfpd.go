@@ -44,7 +44,6 @@ type f struct {
 // branded_food.csv) are merged.  Existing foods are ignored and previous versions of a
 // food are removed.  The end product is a database containing only current versions of foods
 func (p Bfpd) ProcessFiles(path string, dc ds.DataSource, bucket string) error {
-
 	var (
 		dt   *fdc.DocType
 		il   []interface{}
@@ -69,7 +68,7 @@ func (p Bfpd) ProcessFiles(path string, dc ds.DataSource, bucket string) error {
 	var buf bytes.Buffer
 	r := csv.NewReader(&buf)
 	fgid := 0
-
+	// process the merged datastream
 	for l := range mergedLinesChan {
 		buf.WriteString(fmt.Sprintf("%v,%v", l.id, l.restOfLine))
 		record, _ := r.Read()
@@ -86,6 +85,7 @@ func (p Bfpd) ProcessFiles(path string, dc ds.DataSource, bucket string) error {
 			if err != nil {
 				log.Println(err)
 			}
+<<<<<<< HEAD
 			food.ID = record[0]
 			food.FdcID = record[0]
 			food.Description = record[2]
@@ -125,6 +125,65 @@ func (p Bfpd) ProcessFiles(path string, dc ds.DataSource, bucket string) error {
 				if !fg {
 					fgid++
 					fgrp[record[11]] = fdc.FoodGroup{ID: int32(fgid), Description: record[11], Type: dt.ToString(fdc.FGGPC)}
+=======
+
+			if rc := dc.FoodExists(record[0]); rc {
+				continue
+			} else { // create a new food
+				s = nil
+				pubdate, err := time.Parse("2006-01-02", record[4])
+				if err != nil {
+					log.Println(err)
+				}
+				food.ID = record[0]
+				food.FdcID = record[0]
+				food.Description = record[2]
+				food.PublicationDate = pubdate
+				food.Manufacturer = record[5]
+				food.Upc = record[6]
+				food.Ingredients = record[7]
+				cnts.Foods++
+				if cnts.Foods%10000 == 0 {
+					log.Println("Foods Count = ", cnts.Foods)
+				}
+				a, err := strconv.ParseFloat(record[8], 32)
+				if err != nil {
+					log.Println(record[0] + ": can't parse serving amount " + record[8])
+				} else {
+					s = append(s, fdc.Serving{
+						Nutrientbasis: record[9],
+						Description:   record[10],
+						Servingamount: float32(a),
+					})
+					food.Servings = s
+				}
+				food.Source = record[12]
+				if record[13] != "" {
+					food.ModifiedDate, _ = time.Parse("2006-01-02", record[13])
+				}
+				if record[14] != "" {
+					food.AvailableDate, _ = time.Parse("2006-01-02", record[14])
+				}
+				if record[16] != "" {
+					food.DiscontinueDate, _ = time.Parse("2006-01-02", record[16])
+				}
+				food.Country = record[15]
+				food.Type = dt.ToString(fdc.FOOD)
+				if record[11] != "" {
+					_, fg := fgrp[record[11]]
+					if !fg {
+						fgid++
+						fgrp[record[11]] = fdc.FoodGroup{ID: int32(fgid), Description: record[11], Type: dt.ToString(fdc.FGGPC)}
+					}
+					food.Group = &fdc.FoodGroup{ID: int32(fgrp[record[11]].ID), Description: fgrp[record[11]].Description, Type: fgrp[record[11]].Type}
+				} else {
+					food.Group = nil
+				}
+				// first remove any existing versions for this GTIN/UPC code
+				removeVersions(food.Upc, bucket, dc)
+				if err = dc.Update(record[0], food); err != nil {
+					log.Printf("Update %s failed: %v", record[0], err)
+>>>>>>> 519dbf4eb8891e1a24912d4a20b764308e6490ce
 				}
 				food.Group = &fdc.FoodGroup{ID: int32(fgrp[record[11]].ID), Description: fgrp[record[11]].Description, Type: fgrp[record[11]].Type}
 			} else {
@@ -137,8 +196,11 @@ func (p Bfpd) ProcessFiles(path string, dc ds.DataSource, bucket string) error {
 			}
 
 		}
+<<<<<<< HEAD
 
 	}
+=======
+>>>>>>> 519dbf4eb8891e1a24912d4a20b764308e6490ce
 	if err = nutrients(path, bucket, dc); err != nil {
 		log.Printf("nutrient load failed: %v", err)
 	}
@@ -170,6 +232,7 @@ func removeVersions(upc string, bucket string, dc ds.DataSource) {
 		if err = dc.Remove(fid.FdcID); err != nil {
 			log.Printf("Cannot remove %s\n", fid.FdcID)
 		}
+		log.Printf("Removed %s\n",fid.FdcID)
 	}
 	return
 
