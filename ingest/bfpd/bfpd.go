@@ -266,6 +266,7 @@ func nutrients(path string, gbucket string, dc ds.DataSource) error {
 			Derivation:   dv,
 			Type:         dt.ToString(fdc.NUTDATA),
 			Source:       source,
+			Serving:      food.Servings,
 		})
 		if cnts.Nutrients%1000 == 0 {
 			log.Println("Nutrients Count = ", cnts.Nutrients)
