@@ -51,6 +51,7 @@ func (p Bfpd) ProcessFiles(path string, dc ds.DataSource, bucket string) error {
 		s    []fdc.Serving
 		err  error
 	)
+
 	if il, err = dc.GetDictionary(bucket, dt.ToString(fdc.FGGPC), 0, 500); err != nil {
 		return err
 	}
@@ -180,6 +181,7 @@ func nutrients(path string, gbucket string, dc ds.DataSource) error {
 	var (
 		dt          *fdc.DocType
 		food        fdc.Food
+		n           []fdc.NutrientData
 		cid, source string
 	)
 	fn := path + "food_nutrient.csv"
@@ -190,7 +192,7 @@ func nutrients(path string, gbucket string, dc ds.DataSource) error {
 
 	r := csv.NewReader(f)
 	var (
-		n  []fdc.NutrientData
+		//n  []fdc.NutrientData
 		il []interface{}
 	)
 	//q := fmt.Sprintf("select gd.* from %s as gd where type='%s' offset %d limit %d", gbucket, dt.ToString(fdc.NUT), 0, 500)
@@ -266,8 +268,8 @@ func nutrients(path string, gbucket string, dc ds.DataSource) error {
 			Derivation:   dv,
 			Type:         dt.ToString(fdc.NUTDATA),
 			Source:       source,
-			Serving:      food.Servings,
 		})
+
 		if cnts.Nutrients%1000 == 0 {
 			log.Println("Nutrients Count = ", cnts.Nutrients)
 			err := dc.Bulk(&n)
