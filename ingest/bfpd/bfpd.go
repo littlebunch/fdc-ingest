@@ -179,10 +179,11 @@ func removeVersions(upc string, bucket string, dc ds.DataSource) {
 
 func nutrients(path string, gbucket string, dc ds.DataSource) error {
 	var (
-		dt          *fdc.DocType
-		food        fdc.Food
-		n           []fdc.NutrientData
-		cid, source string
+		dt                   *fdc.DocType
+		food                 fdc.Food
+		n                    []fdc.NutrientData
+		cid, source, portion string
+		portionValue         float32
 	)
 	fn := path + "food_nutrient.csv"
 	f, err := os.Open(fn)
@@ -251,6 +252,8 @@ func nutrients(path string, gbucket string, dc ds.DataSource) error {
 			}
 			cid = id
 			source = food.Source
+			portion = food.Servings[0].Description
+			portionValue = food.Servings[0].Servingamount
 
 		}
 
@@ -268,6 +271,8 @@ func nutrients(path string, gbucket string, dc ds.DataSource) error {
 			Derivation:   dv,
 			Type:         dt.ToString(fdc.NUTDATA),
 			Source:       source,
+			Portion:      portion,
+			PortionValue: (portionValue * float32(w)) / 100,
 		})
 
 		if cnts.Nutrients%1000 == 0 {
