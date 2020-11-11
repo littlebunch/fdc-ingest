@@ -183,7 +183,7 @@ func nutrients(path string, gbucket string, dc ds.DataSource) error {
 		food                 fdc.Food
 		n                    []fdc.NutrientData
 		cid, source, portion string
-		portionValue         float32
+		portionValue         float64
 	)
 	fn := path + "food_nutrient.csv"
 	f, err := os.Open(fn)
@@ -231,7 +231,7 @@ func nutrients(path string, gbucket string, dc ds.DataSource) error {
 			}
 		}
 		cnts.Nutrients++
-		w, err := strconv.ParseFloat(record[3], 32)
+		w, err := strconv.ParseFloat(record[3], 64)
 		if err != nil {
 			log.Println(record[0] + ": can't parse value " + record[4])
 		}
@@ -253,7 +253,7 @@ func nutrients(path string, gbucket string, dc ds.DataSource) error {
 			cid = id
 			source = food.Source
 			portion = food.Servings[0].Description
-			portionValue = food.Servings[0].Servingamount
+			portionValue = float64(food.Servings[0].Servingamount)
 
 		}
 
@@ -265,14 +265,14 @@ func nutrients(path string, gbucket string, dc ds.DataSource) error {
 			Manufacturer: food.Manufacturer,
 			Category:     food.Group.Description,
 			Nutrientno:   nutmap[uint(v)].Nutrientno,
-			Value:        float32(w),
+			Value:        w,
 			Nutrient:     nutmap[uint(v)].Name,
 			Unit:         nutmap[uint(v)].Unit,
 			Derivation:   dv,
 			Type:         dt.ToString(fdc.NUTDATA),
 			Source:       source,
 			Portion:      portion,
-			PortionValue: (portionValue * float32(w)) / 100,
+			PortionValue: (portionValue * w) / 100,
 		})
 
 		if cnts.Nutrients%1000 == 0 {

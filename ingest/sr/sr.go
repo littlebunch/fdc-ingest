@@ -77,7 +77,7 @@ func foods(path string, dc ds.DataSource, t string) (int, error) {
 		il []interface{}
 		dt *fdc.DocType
 	)
-	type food struct {
+	/*type food struct {
 		ID              string         `json:"_id,"omitempty"`
 		FdcID           string         `json:"fdcId" binding:"required"`
 		Description     string         `json:"foodDescription" binding:"required"`
@@ -85,7 +85,7 @@ func foods(path string, dc ds.DataSource, t string) (int, error) {
 		PublicationDate time.Time      `json:"publicationDateTime"`
 		Group           *fdc.FoodGroup `json:"foodGroup,omitempty"`
 		Type            string         `json:"type" binding:"required"`
-	}
+	}*/
 	dtype := dt.ToString(fdc.FGSR)
 	fn := path + "food.csv"
 	cnt := 0
@@ -125,10 +125,10 @@ func foods(path string, dc ds.DataSource, t string) (int, error) {
 		} else {
 			fg = nil
 		}
-
-		dc.Update(record[0],
-			food{
-				ID:              record[0],
+		id := fmt.Sprintf("%s:%s", dt.ToString(fdc.FOOD), record[0])
+		dc.Update(id,
+			fdc.Food{
+				ID:              id,
 				FdcID:           record[0],
 				Description:     record[2],
 				PublicationDate: pubdate,
@@ -142,6 +142,7 @@ func foods(path string, dc ds.DataSource, t string) (int, error) {
 
 func servings(path string, dc ds.DataSource, rc chan error) {
 	defer close(rc)
+	var dt *fdc.DocType
 	fn := path + "food_portion.csv"
 	f, err := os.Open(fn)
 	if err != nil {
@@ -165,11 +166,10 @@ func servings(path string, dc ds.DataSource, rc chan error) {
 			return
 		}
 
-		id := record[1]
+		id := fmt.Sprintf("%s:%s", dt.ToString(fdc.FOOD), record[1])
 		if cid != id {
 			if cid != "" {
 				food.Servings = s
-				fmt.Printf("%s\n", food.ID)
 				dc.Update(cid, food)
 			}
 			cid = id
@@ -186,7 +186,7 @@ func servings(path string, dc ds.DataSource, rc chan error) {
 		if err != nil {
 			log.Println(record[0] + ": can't parse serving amount " + record[3])
 		}
-		w, err := strconv.ParseFloat(record[7], 32)
+		w, err := strconv.ParseFloat(record[7], 2)
 		if err != nil {
 			log.Println(record[0] + ": can't parse serving weight " + record[7])
 		}
@@ -213,7 +213,10 @@ func ndbnoCw(path string, dc ds.DataSource, rc chan error) {
 		return
 	}
 
-	var food fdc.Food
+	var (
+		dt   *fdc.DocType
+		food fdc.Food
+	)
 	r := csv.NewReader(f)
 	for {
 		record, err := r.Read()
@@ -224,9 +227,10 @@ func ndbnoCw(path string, dc ds.DataSource, rc chan error) {
 			rc <- err
 			return
 		}
-		dc.Get(record[0], &food)
+		id := fmt.Sprintf("%s:%s", dt.ToString(fdc.FOOD), record[0])
+		dc.Get(id, &food)
 		food.NdbNo = record[1]
-		dc.Update(record[0], food)
+		dc.Update(id, food)
 
 	}
 	rc <- nil
@@ -272,7 +276,7 @@ func nutrients(path string, dc ds.DataSource, rc chan error) {
 			return
 		}
 
-		id := record[1]
+		id := fmt.Sprintf("%s:%s", dt.ToString(fdc.FOOD), record[1])
 		if cid != id {
 			if err = dc.Get(id, &food); err != nil {
 				log.Printf("Cannot find %s %v", id, err)
@@ -282,7 +286,7 @@ func nutrients(path string, dc ds.DataSource, rc chan error) {
 
 		}
 		cnts.Nutrients++
-		w, err := strconv.ParseFloat(record[3], 32)
+		w, err := strconv.ParseFloat(record[3], 2)
 		if err != nil {
 			log.Println(record[0] + ": can't parse value " + record[4])
 		}
@@ -304,13 +308,13 @@ func nutrients(path string, dc ds.DataSource, rc chan error) {
 		} else {
 			dv = nil
 		}
-
+		nid := fmt.Sprintf("%s:%s:%s:%s", dt.ToString(fdc.FOOD), record[1], dt.ToString(fdc.NUTDATA), nutmap[uint(v)].Nutrientno)
 		n = append(n, fdc.NutrientData{
-			ID:         fmt.Sprintf("%s_%d", id, nutmap[uint(v)].Nutrientno),
-			FdcID:      id,
+			ID:         nid,
+			FdcID:      record[1],
 			Source:     source,
 			Nutrientno: nutmap[uint(v)].Nutrientno,
-			Value:      float32(w),
+			Value:      w,
 			Nutrient:   nutmap[uint(v)].Name,
 			Unit:       nutmap[uint(v)].Unit,
 			Derivation: dv,

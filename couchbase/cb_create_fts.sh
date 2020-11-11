@@ -6,9 +6,10 @@
 curl -u administrator:administrator -XPUT http://localhost:8094/api/index/fts_srlegacy -H 'cache-control: no-cache' -H 'content-type:application/json' -d '
 {
   "type": "fulltext-index",
-  "name": "fts_srlegacy",
+  "name": "fts_bfpd",
+  "uuid": "3968b8b33f209096",
   "sourceType": "couchbase",
-  "sourceName": "srlegacy",
+  "sourceName": "bfpd",
   "planParams": {
     "maxPartitionsPerPIndex": 171
   },
@@ -107,6 +108,70 @@ curl -u administrator:administrator -XPUT http://localhost:8094/api/index/fts_sr
                   "type": "text"
                 }
               ]
+            },
+            "foodGroup": {
+              "dynamic": true,
+              "enabled": true,
+              "properties": {
+                "description": {
+                  "dynamic": false,
+                  "enabled": true,
+                  "fields": [
+                    {
+                      "include_term_vectors": true,
+                      "index": true,
+                      "name": "description",
+                      "store": true,
+                      "type": "text"
+                    }
+                  ]
+                },
+                "id": {
+                  "dynamic": false,
+                  "enabled": true,
+                  "fields": [
+                    {
+                      "include_term_vectors": true,
+                      "index": true,
+                      "name": "id",
+                      "type": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            "foodGroup_facet": {
+              "default_analyzer": "keyword",
+              "dynamic": true,
+              "enabled": true,
+              "properties": {
+                "description": {
+                  "dynamic": false,
+                  "enabled": true,
+                  "fields": [
+                    {
+                      "include_term_vectors": true,
+                      "index": true,
+                      "name": "description",
+                      "store": true,
+                      "type": "text"
+                    }
+                  ]
+                },
+                "id": {
+                  "dynamic": false,
+                  "enabled": true,
+                  "fields": [
+                    {
+                      "include_term_vectors": true,
+                      "index": true,
+                      "name": "id",
+                      "store": true,
+                      "type": "text"
+                    }
+                  ]
+                }
+              }
             },
             "ingredients": {
               "dynamic": false,

@@ -276,7 +276,7 @@ func nutrients(path string, dc ds.DataSource, rc chan error) {
 
 		}
 		cnts.Nutrients++
-		w, err := strconv.ParseFloat(record[3], 32)
+		w, err := strconv.ParseFloat(record[3], 64)
 		if err != nil {
 			log.Println(record[0] + ": can't parse value " + record[4])
 		}
@@ -292,7 +292,7 @@ func nutrients(path string, dc ds.DataSource, rc chan error) {
 			FdcID:      id,
 			Source:     source,
 			Nutrientno: nutmap[uint(v)].Nutrientno,
-			Value:      float32(w),
+			Value:      w,
 			Nutrient:   nutmap[uint(v)].Name,
 			Unit:       nutmap[uint(v)].Unit,
 			Derivation: dv,
