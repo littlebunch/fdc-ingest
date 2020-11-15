@@ -79,7 +79,7 @@ func Joiner(metadata, setIDs <-chan *line, out chan<- *line) {
 		for bf = range setIDs {
 			// add all branded_foods.csv with matching IDs
 			if bf.id == md.id {
-				md.restOfLine += sep + si.restOfLine
+				md.restOfLine += sep + bf.restOfLine
 				sep = " "
 			} else if bf.id > md.id {
 				break

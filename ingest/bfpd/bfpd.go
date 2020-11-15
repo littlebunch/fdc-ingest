@@ -56,6 +56,7 @@ func (p Bfpd) ProcessFiles(path string, dc ds.DataSource, bucket string) error {
 		return err
 	}
 	fgrp := dictionaries.InitBrandedFoodGroupInfoMap(il)
+
 	// read food.csv metadata
 	metadataChan := make(chan *line)
 	go reader(path+"food.csv", metadataChan)
@@ -224,7 +225,7 @@ func nutrients(path string, gbucket string, dc ds.DataSource) error {
 		}
 		if processit = dc.FoodExists(id); !processit {
 			// delete this record if the parent food doesn't exist
-			nid := fmt.Sprintf("%s_%d", id, nutmap[uint(v)].Nutrientno)
+			nid := fmt.Sprintf("%s_%s", id, nutmap[uint(v)].Nutrientno)
 			if err = dc.Remove(nid); err != nil {
 				log.Printf("Problem with removing %s: %v\n", nid, err)
 				continue
@@ -258,7 +259,7 @@ func nutrients(path string, gbucket string, dc ds.DataSource) error {
 		}
 
 		n = append(n, fdc.NutrientData{
-			ID:           fmt.Sprintf("%s_%d", id, nutmap[uint(v)].Nutrientno),
+			ID:           fmt.Sprintf("%s_%s", id, nutmap[uint(v)].Nutrientno),
 			FdcID:        id,
 			Upc:          food.Upc,
 			Description:  food.Description,
