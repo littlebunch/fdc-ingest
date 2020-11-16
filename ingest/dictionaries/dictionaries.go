@@ -3,6 +3,7 @@ package dictionaries
 
 import (
 	"encoding/csv"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -81,11 +82,11 @@ func (p Dictionary) ProcessFiles(path string, dc ds.DataSource, bucket string) e
 		// nutrients
 		case fdc.NUT:
 			var nid int64
-			/*no, err := strconv.ParseFloat(record[3], 32)
+			no, err := strconv.Atoi(record[3])
 			if err != nil {
 				fmt.Printf("%v\n", err)
 				no = 0
-			}*/
+			}
 			nid, err = strconv.ParseInt(record[0], 10, 0)
 			if err != nil {
 				log.Println("Cannot parse ID: " + record[0])
@@ -94,7 +95,7 @@ func (p Dictionary) ProcessFiles(path string, dc ds.DataSource, bucket string) e
 			err = dc.Update(t+":"+record[0],
 				fdc.Nutrient{
 					NutrientID: uint(nid),
-					Nutrientno: record[3],
+					Nutrientno: no,
 					Name:       record[1],
 					Unit:       record[2],
 					Type:       t,
